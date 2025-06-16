@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CaseFolio AI - Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>CaseFolio AI - Connection Test</h1>
+    
+    <div id="status" class="status waiting">
+        Testing connection to API...
+    </div>
+    
+    <div>
+        <button onclick="testAPI()">Test API Connection</button>
+        <button onclick="testDemo()">Test Demo Upload</button>
+        <button onclick="window.location.href='chronoanchor_workbench.html'">Open Main App</button>
+    </div>
+    
+    <h2>Test Results:</h2>
+    <pre id="results">No tests run yet.</pre>
+    
+    <h2>Instructions:</h2>
+    <ol>
+        <li>First, make sure the API is running:
+            <pre>cd "C:\Users\brian\OneDrive\Desktop\CaseFolio_AI"
+python run_demo.py</pre>
+        </li>
+        <li>You should see: "API running at: http://localhost:8000"</li>
+        <li>Click "Test API Connection" above</li>
+        <li>If successful, click "Test Demo Upload"</li>
+        <li>Finally, click "Open Main App"</li>
+    </ol>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        
+        async function testAPI() {
+            const statusEl = document.getElementById('status');
+            const resultsEl = document.getElementById('results');
+            
+            statusEl.className = 'status waiting';
+            statusEl.textContent = 'Testing API connection...';
+            
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                
+                statusEl.className = 'status success';
+                statusEl.textContent = '✓ API is running!';
+                resultsEl.textContent = JSON.stringify(data, null, 2);
+                
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '✗ Cannot connect to API. Make sure run_demo.py is running.';
+                resultsEl.textContent = `Error: ${error.message}\n\nMake sure you ran:\npython run_demo.py`;
+            }
+        }
+        
+        async function testDemo() {
+            const statusEl = document.getElementById('status');
+            const resultsEl = document.getElementById('results');
+            
+            statusEl.className = 'status waiting';
+            statusEl.textContent = 'Testing document processing...';
+            
+            try {
+                // Submit test document
+                const response = await fetch(`${API_URL}/process-case-file/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        case_id: 'test-001',
+                        document_name: 'test.txt',
+                        document_content: 'On 01/10/2024, patient reported severe pain. On 02/15/2024, patient denied any pain.'
+                    })
+                });
+                
+                const job = await response.json();
+                statusEl.textContent = 'Processing document...';
+                resultsEl.textContent = `Job ID: ${job.job_id}\nPolling for results...`;
+                
+                // Poll for results
+                let attempts = 0;
+                const pollInterval = setInterval(async () => {
+                    attempts++;
+                    const statusResponse = await fetch(`${API_URL}/results/${job.job_id}`);
+                    const status = await statusResponse.json();
+                    
+                    resultsEl.textContent = `Job ID: ${job.job_id}\nState: ${status.state}\nProgress: ${JSON.stringify(status.progress)}`;
+                    
+                    if (status.state === 'SUCCESS') {
+                        clearInterval(pollInterval);
+                        statusEl.className = 'status success';
+                        statusEl.textContent = '✓ Processing complete!';
+                        resultsEl.textContent = JSON.stringify(status.result, null, 2);
+                    } else if (status.state === 'FAILURE' || attempts > 20) {
+                        clearInterval(pollInterval);
+                        statusEl.className = 'status error';
+                        statusEl.textContent = '✗ Processing failed';
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '✗ Test failed';
+                resultsEl.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        // Test on load
+        window.onload = () => {
+            testAPI();
+        };
+    </script>
+</body>
+</html>

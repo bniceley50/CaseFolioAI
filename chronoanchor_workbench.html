@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChronoAnchor™ Workbench - CaseFolio AI</title>
+    <link rel="stylesheet" href="chronoanchor_styles.css">
+</head>
+<body>
+    <!-- Header Bar -->
+    <header class="workbench-header">
+        <div class="header-content">
+            <h1 class="app-title">ChronoAnchor™ Workbench</h1>
+            <div class="case-info">
+                <span class="case-name">Johnson v. Smith Motors</span>
+                <span class="case-status">• Active Review</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="exportTimeline()">Export Timeline</button>
+                <button class="btn-primary" onclick="saveProgress()">Save Progress</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workbench Container -->
+    <div class="workbench-container">
+        
+        <!-- Panel A: Document Viewer (60% width) -->
+        <div class="panel document-viewer" id="documentViewer">
+            <div class="panel-header">
+                <h2>Document Viewer</h2>
+                <div class="document-controls">
+                    <button onclick="previousPage()" title="Previous Page">◀</button>
+                    <span class="page-indicator">
+                        Page <span id="currentPage">1</span> of <span id="totalPages">10</span>
+                    </span>
+                    <button onclick="nextPage()" title="Next Page">▶</button>
+                    <button onclick="toggleMinimap()" title="Toggle Minimap">📍</button>
+                </div>
+            </div>
+            
+            <div class="document-content" id="documentContent">
+                <!-- PDF viewer will be rendered here -->
+                <div class="pdf-container">
+                    <div class="pdf-page" data-page="1">
+                        <h3>CASE FILE: Johnson v. Smith Motors</h3>
+                        <p>Date of Filing: <span class="highlight-deterministic" data-fact-id="1">03/15/2024</span></p>
+                        
+                        <h4>INCIDENT REPORT:</h4>
+                        <p>On <span class="highlight-deterministic" data-fact-id="2">01/10/2024</span>, the plaintiff was involved in a motor vehicle accident at the intersection of Main St. and 5th Ave. The initial medical evaluation was performed on <span class="highlight-deterministic" data-fact-id="3">01/10/2024</span> at Mercy Hospital Emergency Room.</p>
+                        
+                        <h4>FOLLOW-UP CARE:</h4>
+                        <p>The patient returned for evaluation on <span class="highlight-deterministic" data-fact-id="4">01/17/2024</span> and began a course of treatment that continued through <span class="highlight-deterministic" data-fact-id="5">02/28/2024</span>.</p>
+                    </div>
+                    
+                    <div class="pdf-page" data-page="2" style="display: none;">
+                        <h3>MEDICAL EXPENSES SUMMARY</h3>
+                        
+                        <div class="expense-item">
+                            <p><strong>Service:</strong> Emergency Room Visit</p>
+                            <p><strong>Provider:</strong> <span class="highlight-deterministic" data-fact-id="6">Dr. Sarah Johnson, MD</span></p>
+                            <p><strong>Date:</strong> <span class="highlight-deterministic" data-fact-id="7">01/10/2024</span></p>
+                            <p><strong>Amount:</strong> <span class="highlight-deterministic" data-fact-id="8">$3,450.00</span></p>
+                        </div>
+                        
+                        <div class="expense-item">
+                            <p><strong>Service:</strong> MRI Imaging</p>
+                            <p><strong>Provider:</strong> <span class="highlight-deterministic" data-fact-id="9">Mercy Hospital Radiology</span></p>
+                            <p><strong>Date:</strong> <span class="highlight-deterministic" data-fact-id="10">01/25/2024</span></p>
+                            <p><strong>Amount:</strong> <span class="highlight-deterministic" data-fact-id="11">$2,800.00</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Minimap (hidden by default) -->
+            <div class="minimap" id="minimap" style="display: none;">
+                <div class="minimap-viewport"></div>
+            </div>
+        </div>
+        
+        <!-- Panel B: Master Chronology (40% width) -->
+        <div class="panel master-chronology" id="masterChronology">
+            <div class="panel-header">
+                <h2>Master Chronology</h2>
+                <div class="chronology-filters">
+                    <select id="filterType" onchange="filterTimeline()">
+                        <option value="all">All Events</option>
+                        <option value="medical">🏥 Medical</option>
+                        <option value="legal">⚖️ Legal</option>
+                        <option value="conflicts">🔥 Conflicts Only</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="timeline-container" id="timelineContainer">
+                <!-- Timeline events will be dynamically generated -->
+                <div class="timeline-event" data-fact-id="2" data-type="medical" onclick="anchorToFact(2)">
+                    <div class="event-date">January 10, 2024</div>
+                    <div class="event-content">
+                        <span class="event-icon">🏥</span>
+                        <div class="event-description">
+                            <strong>Motor Vehicle Accident</strong>
+                            <p>Initial medical evaluation at Mercy Hospital ER</p>
+                        </div>
+                    </div>
+                    <div class="event-source">Page 1</div>
+                </div>
+                
+                <div class="timeline-event" data-fact-id="4" data-type="medical" onclick="anchorToFact(4)">
+                    <div class="event-date">January 17, 2024</div>
+                    <div class="event-content">
+                        <span class="event-icon">🏥</span>
+                        <div class="event-description">
+                            <strong>Follow-up Evaluation</strong>
+                            <p>Patient returned for medical assessment</p>
+                        </div>
+                    </div>
+                    <div class="event-source">Page 1</div>
+                </div>
+                
+                <div class="timeline-event" data-fact-id="10" data-type="medical" onclick="anchorToFact(10)">
+                    <div class="event-date">January 25, 2024</div>
+                    <div class="event-content">
+                        <span class="event-icon">🏥</span>
+                        <div class="event-description">
+                            <strong>MRI Imaging</strong>
+                            <p>Performed at Mercy Hospital Radiology - $2,800.00</p>
+                        </div>
+                    </div>
+                    <div class="event-source">Page 2</div>
+                </div>
+                
+                <div class="timeline-event" data-fact-id="1" data-type="legal" onclick="anchorToFact(1)">
+                    <div class="event-date">March 15, 2024</div>
+                    <div class="event-content">
+                        <span class="event-icon">⚖️</span>
+                        <div class="event-description">
+                            <strong>Case Filing</strong>
+                            <p>Legal proceedings initiated</p>
+                        </div>
+                    </div>
+                    <div class="event-source">Page 1</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel C: Fact Inspector (Slide-over drawer) -->
+        <div class="fact-inspector" id="factInspector">
+            <div class="inspector-header">
+                <h3>Fact Details</h3>
+                <button class="close-btn" onclick="closeFact Inspector()">&times;</button>
+            </div>
+            <div class="inspector-content" id="inspectorContent">
+                <!-- Fact details will be dynamically populated -->
+            </div>
+            <div class="inspector-navigation">
+                <button onclick="previousFact()">← Previous</button>
+                <button onclick="nextFact()">Next →</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading indicator -->
+    <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Load V2 for API integration -->
+    <script src="chronoanchor_app_v2.js"></script>
+</body>
+</html>
